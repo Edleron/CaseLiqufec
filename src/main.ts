@@ -79,7 +79,7 @@ import vertex from './sharedShader.vert?raw';
 
   // PIXI.Shader nesnesini oluşturuyoruz.
   // Bu nesne hem shader kodunu hem de uniform'ları bir arada tutar.
-  const liquidShader = Shader.from({
+  let liquidShader = Shader.from({
     gl: {
         vertex,
         fragment,
@@ -91,7 +91,7 @@ import vertex from './sharedShader.vert?raw';
           type: 'vec4<f32>'
         },
         uFill: {
-          value: 0.75,
+          value: 1.0,
           type: 'f32'
         },
         uRotation: {
@@ -172,10 +172,10 @@ import vertex from './sharedShader.vert?raw';
   quad.position.set(400, 300);
   app.stage.addChild(quad);
   */
-
+  
   // Pixi update loop
   app.ticker.add((ticker: Ticker) => {
-    // quad.rotation -= 0.01;
+    liquidShader.resources.sharedShader.uniforms.uFill -= ticker.elapsedMS / 5000;
   });
 })();
 
