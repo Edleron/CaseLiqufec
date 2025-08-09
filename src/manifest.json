@@ -1,0 +1,152 @@
+{
+  "bundles": [
+    {
+      "name": "default",
+      "assets": []
+    },
+    {
+      "name": "main",
+      "assets": [
+        {
+          "alias": [
+            "main/game",
+            "game"
+          ],
+          "src": [
+            "main/game@0.5x.webp.json",
+            "main/game@0.5x.png.json",
+            "main/game.webp.json",
+            "main/game.png.json"
+          ],
+          "data": {
+            "tags": {
+              "m": true,
+              "tps": true
+            }
+          }
+        },
+        {
+          "alias": [
+            "main/sounds/bgm-main.mp3",
+            "bgm-main.mp3"
+          ],
+          "src": [
+            "main/sounds/bgm-main.ogg",
+            "main/sounds/bgm-main.mp3"
+          ],
+          "data": {
+            "tags": {
+              "m": true
+            }
+          }
+        },
+        {
+          "alias": [
+            "main/sounds/sfx-hover.wav",
+            "sfx-hover.wav"
+          ],
+          "src": [
+            "main/sounds/sfx-hover.ogg",
+            "main/sounds/sfx-hover.mp3"
+          ],
+          "data": {
+            "tags": {
+              "m": true
+            }
+          }
+        },
+        {
+          "alias": [
+            "main/sounds/sfx-press.wav",
+            "sfx-press.wav"
+          ],
+          "src": [
+            "main/sounds/sfx-press.ogg",
+            "main/sounds/sfx-press.mp3"
+          ],
+          "data": {
+            "tags": {
+              "m": true
+            }
+          }
+        },
+        {
+          "alias": [
+            "main/ui",
+            "ui"
+          ],
+          "src": [
+            "main/ui@0.5x.webp.json",
+            "main/ui@0.5x.png.json",
+            "main/ui.webp.json",
+            "main/ui.png.json"
+          ],
+          "data": {
+            "tags": {
+              "m": true,
+              "tps": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "preload",
+      "assets": [
+        {
+          "alias": [
+            "preload/logo.png",
+            "logo.png"
+          ],
+          "src": [
+            "preload/logo@0.5x.webp",
+            "preload/logo@0.5x.png",
+            "preload/logo.webp",
+            "preload/logo.png"
+          ],
+          "data": {
+            "tags": {
+              "m": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "test",
+      "assets": [
+        {
+          "alias": [
+            "test/bg_rotate.jpg",
+            "bg_rotate.jpg"
+          ],
+          "src": [
+            "test/bg_rotate@0.5x.webp",
+            "test/bg_rotate@0.5x.jpg",
+            "test/bg_rotate.webp",
+            "test/bg_rotate.jpg"
+          ],
+          "data": {
+            "tags": {
+              "m": true
+            }
+          }
+        },
+        {
+          "alias": [
+            "test/logo.svg",
+            "logo.svg"
+          ],
+          "src": [
+            "test/logo.svg"
+          ],
+          "data": {
+            "tags": {
+              "m": true
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
