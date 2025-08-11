@@ -6,8 +6,8 @@ import { PixiPlugin } from "gsap/PixiPlugin";
 import gsap from "gsap";
 import Background from "../Background";
 
-import fragment from './shaders/liqued/sharedShader.frag?raw';
-import vertex   from './shaders/liqued/sharedShader.vert?raw';
+import fragment from '../shaders/liqued/sharedShader.frag?raw';
+import vertex   from '../shaders/liqued/sharedShader.vert?raw';
 
 (async () => {
   const app = new Application();
@@ -20,6 +20,7 @@ import vertex   from './shaders/liqued/sharedShader.vert?raw';
   gsap.registerPlugin(PixiPlugin);
   PixiPlugin.registerPIXI(PIXI);
 
+  /*
   const assetList = [
     { alias: "Bottle_Front", src: "/assets/Bottle_Front.png" },
     { alias: "Bottle_Back", src: "/assets/Bottle_Back.png" },
@@ -36,18 +37,26 @@ import vertex   from './shaders/liqued/sharedShader.vert?raw';
 
   // Load assets
   await Promise.all(assetList.map((asset) => Assets.load(asset.alias)));
+  */
 
   const background = new Background(Texture.WHITE);
   background.resize(app.screen.width, app.screen.height);
   app.stage.addChild(background);
 
+  const createVertexColors = (color: string, vertexCount: number = 4) => {
+    const rgbArray = new PIXI.Color(color).toRgbArray();
+    return Array(vertexCount).fill(rgbArray).flat();
+  };
+
 
   // Sample Pixi Sprite object
+  /*
   const bottleFront = Sprite.from("Bottle_Front");
   bottleFront.anchor.set(0.5);
   bottleFront.scale.set(1);
   bottleFront.position.set(0, 0);
   app.stage.addChild(bottleFront);
+  */
 
   // 1. Geometriyi Oluştur
   // Sıvıyı çizeceğimiz alanı belirleyen bir dörtgen geometri oluşturuyoruz.
@@ -55,12 +64,13 @@ import vertex   from './shaders/liqued/sharedShader.vert?raw';
   const liquidGeometry = new Geometry({
     attributes: {
       aPosition: [
-        -bottleFront.width / 2, -bottleFront.height / 2,
-         bottleFront.width / 2, -bottleFront.height / 2,
-         bottleFront.width / 2,  bottleFront.height / 2,
-        -bottleFront.width / 2,  bottleFront.height / 2
+        -193 / 2, -554 / 2,
+         193 / 2, -554 / 2,
+         193 / 2,  554 / 2,
+        -193 / 2,  554 / 2
       ],
       aUV: [0, 0, 1, 0, 1, 1, 0, 1],
+      aColor: createVertexColors('rgba(255, 0, 80, 1.0)'),
     },
     indexBuffer: [0, 1, 2, 0, 2, 3],
   });
@@ -74,10 +84,12 @@ import vertex   from './shaders/liqued/sharedShader.vert?raw';
     },
     resources: {
       sharedShader : {
+        /*
         uColor: {
           value: new PIXI.Color('rgba(255, 0, 80, 1.0)').toRgbArray(),
           type: 'vec4<f32>'
         },
+        */
         uFill: {
           value: 1.0,
           type: 'f32'
