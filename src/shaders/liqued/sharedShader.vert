@@ -9,11 +9,13 @@ precision mediump float;
 // Bunlar, PIXI.Geometry'den gelen verilerdir.
 attribute vec2 aPosition; // in vec2 -> attribute vec2
 attribute vec2 aUV;       // in vec2 -> attribute vec2
+attribute vec3 aColor;    // in vec3 -> attribute vec3
 
 // --- Çıktılar (Varyings/Out) ---
 // Bu değişkenler, Fragment Shader'a gönderilir.
 // Değerleri, pikseller arasında enterpolasyona uğrar.
-varying vec2 vUV; // out vec2 -> varying vec2
+varying vec2 vUV;       // out vec2 -> varying vec2
+varying vec3 vColor;    // out vec3 -> varying vec3
 
 // --- Uniform'lar ---
 // Bunlar, PixiJS'in her çizim için otomatik olarak sağladığı matrislerdir.
@@ -30,4 +32,5 @@ void main() {
 
     // UV koordinatını Fragment Shader'a aktar.
     vUV = aUV;
+    vColor = aColor;
 }
