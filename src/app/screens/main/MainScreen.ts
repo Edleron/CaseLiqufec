@@ -33,11 +33,19 @@ export class MainScreen extends Container {
     this.mainContainer.name = "Capsulater";
     this.addChild(this.mainContainer);
 
-
-    this.bottleLeft  = createBottle({ scale: 1 });
+    // Sol şişe: 3 farklı renk katmanı ile dolu
+    this.bottleLeft  = createBottle({ 
+      scale: 1,
+      liquidLayers: [
+        { color: 'rgba(100, 0, 80, 1.0)', fillAmount: 0.5 }, // Kırmızı - alt katman
+        { color: 'rgba(200, 0, 80, 1.0)', fillAmount: 1 },  // Yeşil - orta katman  
+        { color: 'rgba(255, 0, 80, 1.0)', fillAmount: 1 }   // Mavi - üst katman
+      ]
+    });
     this.bottleLeft.name        = "bottle left";
     this.addChild(this.bottleLeft);
 
+    // Sağ şişe: Boş
     this.bottleRight = createBottle({ scale: 1 });
     this.bottleRight.name       = "bottle right";
     this.addChild(this.bottleRight);
