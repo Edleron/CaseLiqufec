@@ -34,11 +34,11 @@ export class MainScreen extends Container {
     this.addChild(this.mainContainer);
 
 
-    this.bottleLeft             = createBottle({ scale: 1});
+    this.bottleLeft  = createBottle({ scale: 1 });
     this.bottleLeft.name        = "bottle left";
     this.addChild(this.bottleLeft);
 
-    this.bottleRight            = createBottle({ scale: 1});
+    this.bottleRight = createBottle({ scale: 1 });
     this.bottleRight.name       = "bottle right";
     this.addChild(this.bottleRight);
 
