@@ -148,7 +148,6 @@ export class Bottle extends Container {
     }
 
     this.liquidContainer.children.forEach((mesh: any) => {
-      console.log(mesh);
       const u = mesh.shader.resources.sharedShader.uniforms;
 
       // Zamanı ilerlet

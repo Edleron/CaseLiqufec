@@ -23,8 +23,15 @@ export class MainScreen extends Container {
   private pauseButton       : FancyButton;
   private settingsButton    : FancyButton;
   // TODO DEL -> private bouncer: Bouncer;
-  private paused = false;
 
+
+  // Click-toggle + position memory
+  private lastClickedBottle: Bottle | null = null;
+  private isBumped  = new WeakMap<Bottle, boolean>();
+  private basePos   = new WeakMap<Bottle, { x: number; y: number }>();
+
+  private paused              = false;
+  private readonly bumpHeight = 150;
 
   constructor() {
     super();
@@ -36,19 +43,36 @@ export class MainScreen extends Container {
     // Sol şişe: 3 farklı renk katmanı ile dolu
     this.bottleLeft  = createBottle({ 
       scale: 1,
-      liquidLayers: [
-        { color: 'rgba(100, 0, 80, 1.0)', fillAmount: 0.65 }, // Kırmızı - alt katman
-        { color: 'rgba(200, 0, 80, 1.0)', fillAmount: 1 },  // Yeşil - orta katman  
-        { color: 'rgba(255, 0, 80, 1.0)', fillAmount: 1 }   // Mavi - üst katman
-      ]
     });
     this.bottleLeft.name        = "bottle left";
     this.addChild(this.bottleLeft);
 
     // Sağ şişe: Boş
-    this.bottleRight = createBottle({ scale: 1 });
+    this.bottleRight = createBottle({ 
+      scale: 1,
+      liquidLayers: [
+        { color: 'rgba(100, 0, 80, 1.0)', fillAmount: 0.65 }, // Kırmızı - alt katman
+        { color: 'rgba(200, 0, 80, 1.0)', fillAmount: 1 },  // Yeşil - orta katman  
+        { color: 'rgba(255, 0, 80, 1.0)', fillAmount: 1 }   // Mavi - üst katman
+      ]
+     });
     this.bottleRight.name       = "bottle right";
     this.addChild(this.bottleRight);
+
+    // Bottle click (pointer/tap) ayarları
+    this.bottleLeft.interactive = true;
+    // @ts-ignore - (Pixi v7'de cursor/buttonMode kullanılabilir)
+    this.bottleLeft.buttonMode = true;
+    // @ts-ignore
+    this.bottleLeft.cursor = "pointer";
+    this.bottleLeft.on("pointertap", () => this.bumpBottle(this.bottleLeft));
+
+    this.bottleRight.interactive = true;
+    // @ts-ignore
+    this.bottleRight.buttonMode = true;
+    // @ts-ignore
+    this.bottleRight.cursor = "pointer";
+    this.bottleRight.on("pointertap", () => this.bumpBottle(this.bottleRight));
 
     const buttonAnimations = {
       hover: {
@@ -83,7 +107,56 @@ export class MainScreen extends Container {
       engine().navigation.presentPopup(SettingsPopup),
     );
     this.addChild(this.settingsButton);
+
+    // Init bump states
+    this.isBumped.set(this.bottleLeft, false);
+    this.isBumped.set(this.bottleRight, false);
   }
+
+  private bumpBottle(target: Bottle) {
+    if (this.paused) return;
+
+    console.log(target, this.lastClickedBottle)
+    // If same bottle tapped again while bumped => reset both bottles to base
+    if (this.lastClickedBottle === target && this.isBumped.get(target)) {
+      this.resetBottles();
+      this.lastClickedBottle = null;
+      return;
+    }
+
+    const base = this.getBasePos(target);
+    gsap.killTweensOf(target);
+    gsap.to(target, {
+      y: base.y - this.bumpHeight,
+      duration: 0.4,
+      ease: "power2.out",
+    });
+
+    this.isBumped.set(target, true);
+    this.lastClickedBottle = target;
+  }
+
+  // Animate both bottles back to their base positions
+  private resetBottles() {
+    [this.bottleLeft, this.bottleRight].forEach((b) => {
+      const base = this.getBasePos(b);
+      gsap.killTweensOf(b);
+      gsap.to(b, { y: base.y, duration: 0.35, ease: "power2.inOut" });
+      this.isBumped.set(b, false);
+    });
+  }
+
+  // Remember base position for a bottle
+  private setBasePos(b: Bottle, x: number, y: number) {
+    this.basePos.set(b, { x, y });
+  }
+
+  // Get base position (fallback to current if missing)
+  private getBasePos(b: Bottle) {
+    return this.basePos.get(b) ?? { x: b.x, y: b.y };
+  }
+
+
 
   /** Prepare the screen just before showing */
   public prepare() {}
@@ -92,7 +165,7 @@ export class MainScreen extends Container {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public update(_time: Ticker) {
     if (this.paused) return;
-    this.bottleLeft.update(_time.elapsedMS / 5000);
+    this.bottleRight.update(_time.elapsedMS / 5000);
     // TODO DEL -> this.bouncer.update();
   }
 
@@ -134,7 +207,9 @@ export class MainScreen extends Container {
     this.bottleRight.x = centerX + 250;
     this.bottleRight.y = centerY;
 
-    // TODO DEL -> this.bouncer.resize(width, height);
+    // Update base positions after layout so "return to base" knows where to go
+    this.setBasePos(this.bottleLeft, this.bottleLeft.x, this.bottleLeft.y);
+    this.setBasePos(this.bottleRight, this.bottleRight.x, this.bottleRight.y);
   }
 
   /** Show screen with animations */
