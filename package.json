@@ -12,8 +12,9 @@
   "dependencies": {
     "@pixi/sound": "^6.0.1",
     "@pixi/ui": "^2.2.2",
+    "gsap": "^3.13.0",
     "pixi.js": "^8.8.1",
-    "gsap": "^3.13.0"
+    "xstate": "^5.20.2"
   },
   "devDependencies": {
     "@assetpack/core": "^1.4.0",
