@@ -37,7 +37,7 @@ export class MainScreen extends Container {
     this.bottleLeft  = createBottle({ 
       scale: 1,
       liquidLayers: [
-        { color: 'rgba(100, 0, 80, 1.0)', fillAmount: 0.5 }, // Kırmızı - alt katman
+        { color: 'rgba(100, 0, 80, 1.0)', fillAmount: 0.65 }, // Kırmızı - alt katman
         { color: 'rgba(200, 0, 80, 1.0)', fillAmount: 1 },  // Yeşil - orta katman  
         { color: 'rgba(255, 0, 80, 1.0)', fillAmount: 1 }   // Mavi - üst katman
       ]
@@ -92,6 +92,7 @@ export class MainScreen extends Container {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public update(_time: Ticker) {
     if (this.paused) return;
+    this.bottleLeft.update(_time.elapsedMS / 5000);
     // TODO DEL -> this.bouncer.update();
   }
 

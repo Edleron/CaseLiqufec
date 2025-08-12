@@ -1,4 +1,4 @@
-import { Container, Sprite, Texture, Shader, Geometry, Mesh, Color } from "pixi.js";
+import { Container, Sprite, Texture, Shader, Geometry, Mesh, Color, Ticker } from "pixi.js";
 
 import fragment from '../../../shaders/liqued/sharedShader.frag?raw';
 import vertex   from '../../../shaders/liqued/sharedShader.vert?raw';
@@ -120,7 +120,7 @@ export class Bottle extends Container {
         resources : {
           sharedShader : {
             uFill             : { value: 0.0,   type: 'f32' },
-            uRotation         : { value: 0.0,   type: 'f32' },
+            uRotation         : { value: -1,   type: 'f32' },
             uTime             : { value: 0.0,   type: 'f32' },
             uWaveSpeed        : { value: 25.0,  type: 'f32' },
             uWaveFrequency    : { value: 15.0,  type: 'f32' },
@@ -129,6 +129,36 @@ export class Bottle extends Container {
         }
       });
       return shader;
+  }
+
+  private targetFrequency = 12;
+  private targetAmplitude = 0.015;
+  private _lastAngleDeg   = NaN;
+
+  public update(delta: number) {
+    const dt = delta / 30; // ~saniye ölçeği
+
+    if (this.angle !== this._lastAngleDeg) {
+      this._lastAngleDeg = this.angle;
+      const rot = Math.sin(this.rotation); // [-1, 1]
+      this.liquidContainer.children.forEach((mesh: any) => {
+        const u = mesh.shader.resources.sharedShader.uniforms;
+        u.uRotation = rot;
+      });
+    }
+
+    this.liquidContainer.children.forEach((mesh: any) => {
+      console.log(mesh);
+      const u = mesh.shader.resources.sharedShader.uniforms;
+
+      // Zamanı ilerlet
+      u.uTime += dt * u.uWaveSpeed;
+
+      // İsteğe bağlı: anlık parametre ayarları
+      u.uWaveFrequency = this.targetFrequency;
+      u.uWaveAmplitude = this.targetAmplitude;
+       // runtime’da hız değiştirmek için
+    });
   }
 }
 
