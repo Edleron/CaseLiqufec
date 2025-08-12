@@ -59,20 +59,24 @@ export class MainScreen extends Container {
     this.bottleRight.name       = "bottle right";
     this.addChild(this.bottleRight);
 
-    // Bottle click (pointer/tap) ayarları
-    this.bottleLeft.interactive = true;
+    // Bottle click (pointer/tap) ayarları -> move to Bottle class
+    // this.bottleLeft.interactive = true;
     // @ts-ignore - (Pixi v7'de cursor/buttonMode kullanılabilir)
-    this.bottleLeft.buttonMode = true;
+    // this.bottleLeft.buttonMode = true;
     // @ts-ignore
-    this.bottleLeft.cursor = "pointer";
-    this.bottleLeft.on("pointertap", () => this.bumpBottle(this.bottleLeft));
+    // this.bottleLeft.cursor = "pointer";
+    // this.bottleLeft.on("pointertap", () => this.bumpBottle(this.bottleLeft));
+    this.bottleLeft.enableClick();
+    this.bottleLeft.on("bottle:tap", () => this.bumpBottle(this.bottleLeft));
 
-    this.bottleRight.interactive = true;
+    // this.bottleRight.interactive = true;
     // @ts-ignore
-    this.bottleRight.buttonMode = true;
+    // this.bottleRight.buttonMode = true;
     // @ts-ignore
-    this.bottleRight.cursor = "pointer";
-    this.bottleRight.on("pointertap", () => this.bumpBottle(this.bottleRight));
+    // this.bottleRight.cursor = "pointer";
+    // this.bottleRight.on("pointertap", () => this.bumpBottle(this.bottleRight));
+    this.bottleRight.enableClick();
+    this.bottleRight.on("bottle:tap", () => this.bumpBottle(this.bottleRight));
 
     const buttonAnimations = {
       hover: {

@@ -159,6 +159,30 @@ export class Bottle extends Container {
        // runtime’da hız değiştirmek için
     });
   }
+
+  // Click handling (encapsulated)
+  private _onTap = () => {
+    // Emit a semantic event instead of exposing low-level pointer events
+    this.emit("bottle:tap", this);
+  };
+
+  public enableClick(options?: { cursor?: string; buttonMode?: boolean }) {
+    const { cursor = "pointer", buttonMode = true } = options ?? {};
+    this.interactive = true;
+    // @ts-ignore
+    this.buttonMode = buttonMode;
+    // @ts-ignore
+    this.cursor = cursor;
+    this.off("pointertap", this._onTap); // prevent double-binding
+    this.on("pointertap", this._onTap);
+  }
+
+  public disableClick() {
+    this.interactive = false;
+    // @ts-ignore
+    this.buttonMode = false;
+    this.off("pointertap", this._onTap);
+  }
 }
 
 const DEFAULTS: Required<Omit<BottleConfig, "x" | "y" | "scale" | "liquidLayers">> = {
