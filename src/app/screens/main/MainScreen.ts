@@ -5,6 +5,8 @@ import type { Ticker } from "pixi.js";
 import { Container } from "pixi.js";
 import { gsap } from "gsap";
 import { createBottle, Bottle } from "../../builder/bottle";
+import { createActor } from "xstate";
+import { mainFlowMachine } from "./state/MainFlow";
 
 import { engine } from "../../getEngine";
 import { PausePopup } from "../../popups/PausePopup";
@@ -23,6 +25,9 @@ export class MainScreen extends Container {
   private pauseButton       : FancyButton;
   private settingsButton    : FancyButton;
   // TODO DEL -> private bouncer: Bouncer;
+
+  private flowService = createActor(mainFlowMachine);
+  private flowSub?: { unsubscribe: () => void }; // subscribe handle
 
 
   // Click-toggle + position memory
@@ -67,7 +72,11 @@ export class MainScreen extends Container {
     // this.bottleLeft.cursor = "pointer";
     // this.bottleLeft.on("pointertap", () => this.bumpBottle(this.bottleLeft));
     this.bottleLeft.enableClick();
-    this.bottleLeft.on("bottle:tap", () => this.bumpBottle(this.bottleLeft));
+    this.bottleLeft.on("bottle:tap", () => {
+      // TODO -> console.log("Left bottle tapped");
+      this.flowService.send({ type: "TAP", id: "left" });
+      // this.bumpBottle(this.bottleLeft);
+    });
 
     // this.bottleRight.interactive = true;
     // @ts-ignore
@@ -76,7 +85,21 @@ export class MainScreen extends Container {
     // this.bottleRight.cursor = "pointer";
     // this.bottleRight.on("pointertap", () => this.bumpBottle(this.bottleRight));
     this.bottleRight.enableClick();
-    this.bottleRight.on("bottle:tap", () => this.bumpBottle(this.bottleRight));
+    this.bottleRight.on("bottle:tap", () => {
+      // TODO -> console.log("Right bottle tapped");
+      this.flowService.send({ type: "TAP", id: "right" });
+      // this.bumpBottle(this.bottleRight);
+    });
+
+    // Start FSM
+    this.flowService.start();
+
+    // Log state transitions (state value + context)
+    this.flowSub = this.flowService.subscribe((snapshot) => {
+      // snapshot.value -> "idle" | "selected" | "approaching" | "returning"
+      // snapshot.context -> { selected, processing }
+      console.log("[MainFlow]", snapshot.value, snapshot.context);
+    });
 
     const buttonAnimations = {
       hover: {
@@ -247,7 +270,12 @@ export class MainScreen extends Container {
   }
 
   /** Hide screen with animations */
-  public async hide() {}
+  public async hide() {
+    // Stop FSM when screen hides (optional cleanup)
+    this.flowSub?.unsubscribe();
+    this.flowSub = undefined;
+    this.flowService.stop();
+  }
 
   /** Auto pause the app when window go out of focus */
   public blur() {
