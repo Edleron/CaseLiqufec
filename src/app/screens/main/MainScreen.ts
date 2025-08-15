@@ -28,6 +28,7 @@ export class MainScreen extends Container {
 
   private flowService = createActor(mainFlowMachine);
   private flowSub?: { unsubscribe: () => void }; // subscribe handle
+  private currentFlowState: string = "idle";
 
 
   // Click-toggle + position memory
@@ -72,6 +73,12 @@ export class MainScreen extends Container {
     // this.bottleLeft.on("pointertap", () => this.bumpBottle(this.bottleLeft));
     this.bottleLeft.enableClick();
     this.bottleLeft.on("bottle:tap", () => {
+
+      if (this.currentFlowState !== "selected") {
+        console.log("Click blocked - currently in state:", this.currentFlowState);
+        return;
+      }
+
       // TODO -> console.log("Left bottle tapped");
       this.flowService.send({ type: "TAP", id: "left" });
       // this.bumpBottle(this.bottleLeft);
@@ -85,6 +92,11 @@ export class MainScreen extends Container {
     // this.bottleRight.on("pointertap", () => this.bumpBottle(this.bottleRight));
     this.bottleRight.enableClick();
     this.bottleRight.on("bottle:tap", () => {
+
+      if (this.currentFlowState !== "idle" && this.currentFlowState !== "selected") {
+        console.log("Click blocked - currently in state:", this.currentFlowState);
+        return;
+      }
       // TODO -> console.log("Right bottle tapped");
       this.flowService.send({ type: "TAP", id: "right" });
       // this.bumpBottle(this.bottleRight);
@@ -97,6 +109,8 @@ export class MainScreen extends Container {
     this.flowSub = this.flowService.subscribe((snapshot) => {
       // snapshot.value -> "idle" | "selected" | "approaching" | "returning"
       // snapshot.context -> { selected, processing }
+      this.currentFlowState = snapshot.value as string;
+
       console.log("[MainFlow]", snapshot.value, snapshot.context);
 
       if (snapshot.value === "idle") {
@@ -110,6 +124,7 @@ export class MainScreen extends Container {
 
       if (snapshot.value === "approaching" && snapshot.context.selected === "right") {
         this.warpBottle(this.bottleRight, -60);
+        this.bottleRight.drainLayer(0);
       }
 
       if (snapshot.value === "returning" && snapshot.context.processing === "right") {

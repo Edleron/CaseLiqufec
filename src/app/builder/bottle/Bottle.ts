@@ -1,4 +1,5 @@
 import { Container, Sprite, Texture, Shader, Geometry, Mesh, Color, Ticker } from "pixi.js";
+import { gsap } from "gsap";
 
 import fragment from '../../../shaders/liqued/sharedShader.frag?raw';
 import vertex   from '../../../shaders/liqued/sharedShader.vert?raw';
@@ -182,6 +183,22 @@ export class Bottle extends Container {
     // @ts-ignore
     this.buttonMode = false;
     this.off("pointertap", this._onTap);
+  }
+
+  // Belirtilen katmanı 2 saniyede boşalt
+  public drainLayer(layerIndex: number, duration: number = 2) {
+    const targetMesh = this.liquidContainer.children[layerIndex] as any;
+    if (!targetMesh?.shader?.resources?.sharedShader?.uniforms) {
+      console.warn(`Layer ${layerIndex} not found or invalid mesh`);
+      return;
+    }
+
+    const uniforms = targetMesh.shader.resources.sharedShader.uniforms;
+    gsap.to(uniforms, {
+      uFill: 0,
+      duration: duration,
+      ease: "power2.out"
+    });
   }
 }
 

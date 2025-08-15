@@ -21,8 +21,10 @@ export const mainFlowMachine = setup({
     isSameAsSelected: ({ context, event }) => {
         // TODO -> console.log(context, event);
         return event.type === "TAP" && context.selected === event.id;
-    }
-      
+    },
+    isLeftBottleWhenNothingSelected: ({ context, event }) => {
+        return event.type === "TAP" && event.id === "left" && context.selected === null;
+    }        
   },
   actions: {
     // Placeholders; map real side-effects in MainScreen if desired
@@ -44,13 +46,25 @@ export const mainFlowMachine = setup({
     // 1) Waiting for the first tap
     idle: {
       on: {
-        TAP: {
-          target: "selected",
-          actions: [
-            "animateSelect",
-            assign(({ event }) => ({ selected: event.id })),
-          ],
-        },
+        TAP: [
+           // Left bottle tapped when nothing selected -> only go to selected (target mode)
+          {
+            guard: "isLeftBottleWhenNothingSelected",
+            target: "selected",
+            actions: [
+              "animateSelect",
+              assign(({ event }) => ({ selected: event.id })),
+            ],
+          },
+          // Any other tap -> normal flow
+          {
+            target: "selected",
+            actions: [
+              "animateSelect",
+              assign(({ event }) => ({ selected: event.id })),
+            ],
+          },
+        ],
       },
     },
 
