@@ -1,7 +1,7 @@
 // eslint-disable
 
 import * as PIXI from "pixi.js";
-import { Application, Assets, Container, Sprite, Geometry, Mesh, Shader, Point, Texture, Ticker} from "pixi.js";
+import { Application, Container, Geometry, Mesh, Shader, Point, Texture, Ticker} from "pixi.js";
 import { PixiPlugin } from "gsap/PixiPlugin";
 import gsap from "gsap";
 import Background from "../Background";
