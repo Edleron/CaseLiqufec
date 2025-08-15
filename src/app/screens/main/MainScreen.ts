@@ -31,12 +31,11 @@ export class MainScreen extends Container {
 
 
   // Click-toggle + position memory
-  private lastClickedBottle: Bottle | null = null;
   private isBumped  = new WeakMap<Bottle, boolean>();
   private basePos   = new WeakMap<Bottle, { x: number; y: number }>();
 
   private paused              = false;
-  private readonly bumpHeight = 150;
+  private readonly bumpHeight = 300;
 
   constructor() {
     super();
@@ -99,11 +98,28 @@ export class MainScreen extends Container {
       // snapshot.value -> "idle" | "selected" | "approaching" | "returning"
       // snapshot.context -> { selected, processing }
       console.log("[MainFlow]", snapshot.value, snapshot.context);
+
+      if (snapshot.value === "idle") {
+        // Reset both bottles to base position when going idle
+        this.resetBottles(this.bottleRight);
+      }
+
+      if (snapshot.value === "selected" && snapshot.context.selected === "right") {
+        this.bumpBottle(this.bottleRight);
+      }
+
+      if (snapshot.value === "approaching" && snapshot.context.selected === "right") {
+        this.warpBottle(this.bottleRight, -60);
+      }
+
+      if (snapshot.value === "returning" && snapshot.context.processing === "right") {
+        this.warpBottle(this.bottleRight, 0);
+      }
     });
 
     const buttonAnimations = {
       hover: {
-        props: {
+        props: {  
           scale: { x: 1.1, y: 1.1 },
         },
         duration: 100,
@@ -140,16 +156,21 @@ export class MainScreen extends Container {
     this.isBumped.set(this.bottleRight, false);
   }
 
+  private warpBottle(target: Bottle, setAngle : number) {
+     if (this.paused) return;
+
+     gsap.killTweensOf(target);
+     gsap.to(target, {
+       rotation: setAngle * (Math.PI / 180), // -60 degrees converted to radians
+       duration: 0.4,
+       ease: "power2.out",
+     });
+
+     this.isBumped.set(target, true);
+  }
+
   private bumpBottle(target: Bottle) {
     if (this.paused) return;
-
-    console.log(target, this.lastClickedBottle)
-    // If same bottle tapped again while bumped => reset both bottles to base
-    if (this.lastClickedBottle === target && this.isBumped.get(target)) {
-      this.resetBottles();
-      this.lastClickedBottle = null;
-      return;
-    }
 
     const base = this.getBasePos(target);
     gsap.killTweensOf(target);
@@ -160,17 +181,14 @@ export class MainScreen extends Container {
     });
 
     this.isBumped.set(target, true);
-    this.lastClickedBottle = target;
   }
 
   // Animate both bottles back to their base positions
-  private resetBottles() {
-    [this.bottleLeft, this.bottleRight].forEach((b) => {
-      const base = this.getBasePos(b);
-      gsap.killTweensOf(b);
-      gsap.to(b, { y: base.y, duration: 0.35, ease: "power2.inOut" });
-      this.isBumped.set(b, false);
-    });
+  private resetBottles(target: Bottle) {
+    const base = this.getBasePos(target);
+    gsap.killTweensOf(target);
+    gsap.to(target, { y: base.y, duration: 0.35, ease: "power2.inOut" });
+     this.isBumped.set(target, false);
   }
 
   // Remember base position for a bottle
@@ -228,11 +246,11 @@ export class MainScreen extends Container {
     this.settingsButton.y = 30;
 
     // Bottle local koordinatları (0,0) kalsın; mainContainer zaten ortada.
-    this.bottleLeft.x = centerX - 250;
-    this.bottleLeft.y = centerY;
+    this.bottleLeft.x = centerX - 175;
+    this.bottleLeft.y = centerY + 125;
 
-    this.bottleRight.x = centerX + 250;
-    this.bottleRight.y = centerY;
+    this.bottleRight.x = centerX + 175;
+    this.bottleRight.y = centerY + 125;
 
     // Update base positions after layout so "return to base" knows where to go
     this.setBasePos(this.bottleLeft, this.bottleLeft.x, this.bottleLeft.y);

@@ -85,7 +85,7 @@ export const mainFlowMachine = setup({
     // 3) Other bottle is approaching/tilting; after 5s move to returning
     approaching: {
       after: {
-        500: { target: "returning" }, // or use a named delay if configured // TODO -> Approaching process
+        3000: { target: "returning" }, // or use a named delay if configured // TODO -> Approaching process
       },
       on: {
         RESET: {
@@ -99,7 +99,7 @@ export const mainFlowMachine = setup({
     returning: {
       entry: ["revertAll"], // revert processing + selected back to base (angle 0, x/y base)
       after: {
-        500: { target: "idle", actions: ["clearContext"] }, // wait 500ms before going idle
+        1500: { target: "idle", actions: ["clearContext"] }, // wait 500ms before going idle
       },
     },
   },
