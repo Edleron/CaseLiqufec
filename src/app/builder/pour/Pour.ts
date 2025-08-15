@@ -20,7 +20,9 @@ export class Pour {
     public setPour      : boolean = false;
     public tail         : number = 0.0;
     public head         : number = 0.0;
-   
+    private startWorld? : Point;
+    private endWorld?   : Point;
+
     /**
      *
      */
@@ -29,26 +31,21 @@ export class Pour {
         this.reference = this.createPourMeshV8(config);
     }
 
-    public onBottlesMoved(newStart: Point, newEnd: Point) {
-        this.reference.rebuildGeometry(0, newStart, newEnd);
-    }
-    
-    public setVisibleRange(tail: number, head: number) {
-        const u = this.reference.shader.resources.pour.uniforms;
-        u.uTail = Math.max(0, Math.min(tail, 1));
-        u.uHead = Math.max(0, Math.min(head, 1));
+    public setWorld(start: Point, end: Point) {
+        this.startWorld = start;
+        this.endWorld = end;
+        this.tail = 0.0;
+        this.head = 0.0;
     }
 
     public update(dt: number) { 
         if (!this.setPour) { return; }           
         this.head = Math.min(1, this.head + dt * 0.9); // akış uzuyor
         this.reference.setVisibleRange(this.tail, this.head);
-        this.reference.rebuildGeometry(dt);
+        this.reference.rebuildGeometry(dt, this.startWorld, this.endWorld, Math.PI * 5);
     }
 
     private createPourMeshV8(opts: PourOptions) {
-        const startWorld = opts.start.clone();
-        const endWorld = opts.end.clone();
         const segments = opts.segments ?? 32;
         const baseWidth = opts.width ?? 18;
         const gravity = opts.gravity ?? 0.4;
@@ -119,12 +116,13 @@ export class Pour {
         //#endregion
 
         // Geometry rebuild (asıl iş burada)
-        function rebuildGeometry(dtSec: number, newStart?: Point, newEnd?: Point, sourceAngleRad?: number | null) {
-            if (newStart) startWorld.copyFrom(newStart);
-            if (newEnd)   endWorld.copyFrom(newEnd);
+        function rebuildGeometry(dtSec: number, newStart: Point, newEnd: Point, sourceAngleRad?: number | null) {
+            const startWorld = newStart.clone();
+            const endWorld = newEnd.clone();
 
             // Container'ı start noktasına oturt (lokal alan)
-            container.position.set(startWorld.x, startWorld.y);
+            // console.log("XXXXXXXXXXXXX", startWorld);
+            // container.position.set(startWorld.x, startWorld.y);
 
             const len = Math.hypot(endWorld.x - startWorld.x, endWorld.y - startWorld.y);
 
@@ -193,7 +191,7 @@ export class Pour {
             u.uHead = Math.max(0, Math.min(head, 1));
         }
 
-        function setColor(r: number, g: number, b: number, a: number) {
+        function setColor(r: number, g: number, b: number/*, a: number*/) {
             // Update per-vertex color buffer (shader does not use uColor)
             for (let i = 0; i < vertexCount; i++) {
             const o = i * 3;

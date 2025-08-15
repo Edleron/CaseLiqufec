@@ -1,4 +1,4 @@
-import { Container, Sprite, Texture, Shader, Geometry, Mesh, Color, Ticker } from "pixi.js";
+import { Container, Sprite, Texture, Shader, Geometry, Mesh, Color } from "pixi.js";
 import { gsap } from "gsap";
 
 import fragment from '../../../shaders/liqued/sharedShader.frag?raw';

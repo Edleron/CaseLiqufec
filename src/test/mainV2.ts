@@ -116,11 +116,6 @@ function thicknessProfile(t: number, base: number): number {
     pour.setVisibleRange(tail, head);
     pour.rebuildGeometry(dt);
   });
-
-  function onBottlesMoved(newStart: Point, newEnd: Point) {
-    pour.rebuildGeometry(0, newStart, newEnd);
-  }
-
 })();
 
 

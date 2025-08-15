@@ -2,7 +2,7 @@ import { FancyButton } from "@pixi/ui";
 // import { animate } from "motion";
 // import type { AnimationPlaybackControls } from "motion/react";
 import type { Ticker } from "pixi.js";
-import { Container, Point } from "pixi.js";
+import { Container, Graphics, Point } from "pixi.js";
 import { gsap } from "gsap";
 import { createBottle, Bottle } from "../../builder/bottle";
 import { Pour, PourOptions } from "../../builder/pour";
@@ -24,6 +24,7 @@ export class MainScreen extends Container {
   private bottleLeft        : Bottle;
   private bottleRight       : Bottle;
   private pour              : Pour;
+  private pointer           : Graphics
   private pauseButton       : FancyButton;
   private settingsButton    : FancyButton;
   // TODO DEL -> private bouncer: Bouncer;
@@ -59,6 +60,15 @@ export class MainScreen extends Container {
     this.bottleRight.name       = "bottle right";
     this.mainContainer.addChild(this.bottleRight);
 
+    // Create a 1-pixel scale graphics object // todo refactors
+    this.pointer = new Graphics();
+    this.pointer.beginFill(0xFF0000); // Red color
+    this.pointer.drawRect(0, 0, 1, 1);
+    this.pointer.endFill();
+    this.pointer.scale.set(1);
+    this.pointer.position.set(0, -300);
+    this.bottleRight.addChild(this.pointer);
+
     const opts : PourOptions = {
       start           : new Point(600, 160),
       end             : new Point(450, 840),
@@ -85,8 +95,8 @@ export class MainScreen extends Container {
     });
     this.bottleLeft.name        = "bottle left";
     this.mainContainer.addChild(this.bottleLeft);
-    (this.bottleLeft.liquidContainer.getChildAt(0) as any).visible = false; // refactors
-    (this.bottleLeft.liquidContainer.getChildAt(1) as any).visible = false; // refactors
+    (this.bottleLeft.liquidContainer.getChildAt(0) as any).visible = false; // todo refactors
+    (this.bottleLeft.liquidContainer.getChildAt(1) as any).visible = false; // todo refactors
 
     this.bottleRight.zIndex = 10;
     this.pour.reference.container.zIndex = 20;
@@ -146,7 +156,7 @@ export class MainScreen extends Container {
         // Reset both bottles to base position when going idle
         this.bottleRight.drainLayer(0, 0.25, 0.65);
         this.bottleLeft.drainLayer(2, 0.25, 0.00);
-        this.pour.reference.container.isible = false;
+        this.pour.reference.container.visible = false;
         this.resetBottles(this.bottleRight);
       }
 
@@ -156,19 +166,14 @@ export class MainScreen extends Container {
       }
 
       if (snapshot.value === "approaching" && snapshot.context.selected === "right") {
-        this.pour.reference.container.visible = true;
-        this.warpBottle(this.bottleRight, -60);
+        this.warpBottleUp(this.bottleRight, -60);
         this.bottleLeft.drainLayer(2, 2, 1);
         this.bottleRight.drainLayer(0, 2, 0);
       }
 
       if (snapshot.value === "returning" && snapshot.context.processing === "right") {
         this.pour.reference.container.visible = false;
-        this.warpBottle(this.bottleRight, 0);
-        this.pour.tail = 0.0;
-        this.pour.head = 0.0;
-        
-        // this.pour.setVisibleRange(0.0, 0.0);
+        this.warpBottleDown(this.bottleRight, 0);
       }
     });
 
@@ -211,10 +216,63 @@ export class MainScreen extends Container {
     this.isBumped.set(this.bottleRight, false);
   }
 
-  private warpBottle(target: Bottle, setAngle : number) {
+  private getRightTopCenterWorld(): Point {
+    // const rb = this.bottleRight.getBounds(); // world rect
+    // return new Point(rb.x + rb.width / 2, rb.y);
+
+    const globalPos = this.pointer.getGlobalPosition();
+    return new Point(globalPos.x, globalPos.y);
+  }
+
+  private getLeftTopCenterWorld(): Point {
+    const rb = this.bottleLeft.getBounds(); // world rect
+    const fs = new Point((rb.x + rb.width / 2) - 50, rb.y + (rb.height - 80));
+    return fs;
+  }
+
+
+  private updatePourPoints() {
+    const c = this.pour.reference.container;
+
+    const startWorld = this.getRightTopCenterWorld(); 
+    const start      = c.toLocal(startWorld);
+
+    const endWorld = this.getLeftTopCenterWorld(); 
+    const end      = c.toLocal(endWorld);  
+
+    // Create a 1-pixel scale graphics object // todo refactors
+    // const graphic = new Graphics();
+    // graphic.beginFill(0xFF0000); // Red color
+    // graphic.drawRect(0, 0, 1, 1);
+    // graphic.endFill();
+    // graphic.scale.set(1);
+    // graphic.position.set(end.x, end.y);
+    // this.bottleRight.addChild(graphic);
+
+    // 3) Geometriyi güncelle
+    this.pour.setWorld(start, end);
+  }
+
+  private warpBottleUp(target: Bottle, setAngle : number) {
      if (this.paused) return;
 
-     let duration = setAngle < 0 ? 350 : 0;
+     gsap.killTweensOf(target);
+     gsap.to(target, {
+       rotation: setAngle * (Math.PI / 180), // -60 degrees converted to radians
+       duration: 0.25,
+       ease: "power2.out",
+       onComplete: () => {
+          this.pour.reference.container.visible = true;
+          this.updatePourPoints();
+          this.pour.setPour = true;
+       },
+     });
+
+     this.isBumped.set(target, true);
+  }
+
+    private warpBottleDown(target: Bottle, setAngle : number) {
+     if (this.paused) return;
 
      gsap.killTweensOf(target);
      gsap.to(target, {
@@ -222,9 +280,7 @@ export class MainScreen extends Container {
        duration: 1,
        ease: "power2.out",
        onStart: () => {
-         setTimeout(() => {
-          this.pour.setPour = setAngle < 0 ? true : false; // Pouring starts after warp
-         }, duration);
+         this.pour.setPour = false;
        },
      });
 
@@ -275,6 +331,7 @@ export class MainScreen extends Container {
     this.bottleLeft.update(_time.elapsedMS / 5000);
     this.bottleRight.update(_time.elapsedMS / 5000);
     this.pour.update(_time.elapsedMS / 1000);
+    
     // TODO DEL -> this.bouncer.update();
   }
 
@@ -317,6 +374,7 @@ export class MainScreen extends Container {
     this.bottleRight.y = centerY + 125;
 
     // Update base positions after layout so "return to base" knows where to go
+    // this.updatePourPoints();
     this.setBasePos(this.bottleLeft, this.bottleLeft.x, this.bottleLeft.y);
     this.setBasePos(this.bottleRight, this.bottleRight.x, this.bottleRight.y);
   }
