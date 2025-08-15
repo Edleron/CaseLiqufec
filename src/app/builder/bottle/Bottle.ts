@@ -186,7 +186,7 @@ export class Bottle extends Container {
   }
 
   // Belirtilen katmanı 2 saniyede boşalt
-  public drainLayer(layerIndex: number, duration: number = 2) {
+  public drainLayer(layerIndex: number, duration: number, ufillMeters: number) {
     const targetMesh = this.liquidContainer.children[layerIndex] as any;
     if (!targetMesh?.shader?.resources?.sharedShader?.uniforms) {
       console.warn(`Layer ${layerIndex} not found or invalid mesh`);
@@ -195,7 +195,7 @@ export class Bottle extends Container {
 
     const uniforms = targetMesh.shader.resources.sharedShader.uniforms;
     gsap.to(uniforms, {
-      uFill: 0,
+      uFill: ufillMeters,
       duration: duration,
       ease: "power2.out"
     });

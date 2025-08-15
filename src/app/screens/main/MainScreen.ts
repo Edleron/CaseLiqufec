@@ -2,9 +2,10 @@ import { FancyButton } from "@pixi/ui";
 // import { animate } from "motion";
 // import type { AnimationPlaybackControls } from "motion/react";
 import type { Ticker } from "pixi.js";
-import { Container } from "pixi.js";
+import { Container, Point } from "pixi.js";
 import { gsap } from "gsap";
 import { createBottle, Bottle } from "../../builder/bottle";
+import { Pour, PourOptions } from "../../builder/pour";
 import { createActor } from "xstate";
 import { mainFlowMachine } from "./state/MainFlow";
 
@@ -22,6 +23,7 @@ export class MainScreen extends Container {
   public mainContainer      : Container;
   private bottleLeft        : Bottle;
   private bottleRight       : Bottle;
+  private pour              : Pour;
   private pauseButton       : FancyButton;
   private settingsButton    : FancyButton;
   // TODO DEL -> private bouncer: Bouncer;
@@ -29,7 +31,6 @@ export class MainScreen extends Container {
   private flowService = createActor(mainFlowMachine);
   private flowSub?: { unsubscribe: () => void }; // subscribe handle
   private currentFlowState: string = "idle";
-
 
   // Click-toggle + position memory
   private isBumped  = new WeakMap<Bottle, boolean>();
@@ -42,15 +43,9 @@ export class MainScreen extends Container {
     super();
 
     this.mainContainer      = new Container();
+    this.mainContainer.sortableChildren = true; 
     this.mainContainer.name = "Capsulater";
     this.addChild(this.mainContainer);
-
-    // Sol şişe: 3 farklı renk katmanı ile dolu
-    this.bottleLeft  = createBottle({ 
-      scale: 1,
-    });
-    this.bottleLeft.name        = "bottle left";
-    this.addChild(this.bottleLeft);
 
     // Sağ şişe: Boş
     this.bottleRight = createBottle({ 
@@ -62,7 +57,41 @@ export class MainScreen extends Container {
       ]
      });
     this.bottleRight.name       = "bottle right";
-    this.addChild(this.bottleRight);
+    this.mainContainer.addChild(this.bottleRight);
+
+    const opts : PourOptions = {
+      start           : new Point(600, 160),
+      end             : new Point(450, 840),
+      color           : "rgba(100, 0, 80, 1.0)", // Mavi
+      width           : 30,
+      gravity         : 0,
+      segments        : 30,
+      anchorBias      : 2,                // C2 X'ini kaynağa daha da yakın tutar -> daha hızlı dikeyleşir
+      sourceAngleRad  : Math.PI * 5,    // şişe ağzı yönünü manuel vermek istersen aç
+    };
+
+    this.pour = new Pour(opts);
+    this.mainContainer.addChild(this.pour.reference.container);
+
+
+    // Sol şişe: 3 farklı renk katmanı ile dolu
+    this.bottleLeft  = createBottle({ 
+      scale: 1,
+      liquidLayers: [
+        { color: 'rgba(255, 0, 80, 1.0)', fillAmount: 0 }, // Kırmızı - alt katman
+        { color: 'rgba(200, 0, 80, 1.0)', fillAmount: 0 },  // Yeşil - orta katman  
+        { color: 'rgba(100, 0, 80, 1.0)', fillAmount: 0 }   // Mavi - üst katman
+      ]
+    });
+    this.bottleLeft.name        = "bottle left";
+    this.mainContainer.addChild(this.bottleLeft);
+    (this.bottleLeft.liquidContainer.getChildAt(0) as any).visible = false; // refactors
+    (this.bottleLeft.liquidContainer.getChildAt(1) as any).visible = false; // refactors
+
+    this.bottleRight.zIndex = 10;
+    this.pour.reference.container.zIndex = 20;
+    this.bottleLeft.zIndex = 30;
+    this.mainContainer.sortChildren();
 
     // Bottle click (pointer/tap) ayarları -> move to Bottle class
     // this.bottleLeft.interactive = true;
@@ -115,20 +144,31 @@ export class MainScreen extends Container {
 
       if (snapshot.value === "idle") {
         // Reset both bottles to base position when going idle
+        this.bottleRight.drainLayer(0, 0.25, 0.65);
+        this.bottleLeft.drainLayer(2, 0.25, 0.00);
+        this.pour.reference.container.isible = false;
         this.resetBottles(this.bottleRight);
       }
 
       if (snapshot.value === "selected" && snapshot.context.selected === "right") {
+        this.pour.reference.container.visible = false;
         this.bumpBottle(this.bottleRight);
       }
 
       if (snapshot.value === "approaching" && snapshot.context.selected === "right") {
+        this.pour.reference.container.visible = true;
         this.warpBottle(this.bottleRight, -60);
-        this.bottleRight.drainLayer(0);
+        this.bottleLeft.drainLayer(2, 2, 1);
+        this.bottleRight.drainLayer(0, 2, 0);
       }
 
       if (snapshot.value === "returning" && snapshot.context.processing === "right") {
+        this.pour.reference.container.visible = false;
         this.warpBottle(this.bottleRight, 0);
+        this.pour.tail = 0.0;
+        this.pour.head = 0.0;
+        
+        // this.pour.setVisibleRange(0.0, 0.0);
       }
     });
 
@@ -174,11 +214,18 @@ export class MainScreen extends Container {
   private warpBottle(target: Bottle, setAngle : number) {
      if (this.paused) return;
 
+     let duration = setAngle < 0 ? 350 : 0;
+
      gsap.killTweensOf(target);
      gsap.to(target, {
        rotation: setAngle * (Math.PI / 180), // -60 degrees converted to radians
-       duration: 0.4,
+       duration: 1,
        ease: "power2.out",
+       onStart: () => {
+         setTimeout(() => {
+          this.pour.setPour = setAngle < 0 ? true : false; // Pouring starts after warp
+         }, duration);
+       },
      });
 
      this.isBumped.set(target, true);
@@ -225,7 +272,9 @@ export class MainScreen extends Container {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public update(_time: Ticker) {
     if (this.paused) return;
+    this.bottleLeft.update(_time.elapsedMS / 5000);
     this.bottleRight.update(_time.elapsedMS / 5000);
+    this.pour.update(_time.elapsedMS / 1000);
     // TODO DEL -> this.bouncer.update();
   }
 
@@ -253,8 +302,8 @@ export class MainScreen extends Container {
     const centerX = width * 0.5;
     const centerY = height * 0.5;
 
-    this.mainContainer.x = centerX;
-    this.mainContainer.y = centerY;
+    this.mainContainer.x = 0; // centerX
+    this.mainContainer.y = 0; // centerY
     this.pauseButton.x = 30;
     this.pauseButton.y = 30;
     this.settingsButton.x = width - 30;

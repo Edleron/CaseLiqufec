@@ -16,11 +16,11 @@ import vertex   from '../shaders/pour/sharedShader.vert?raw';
  */
 
 type PourOptions = {
-  segments?: number;    // default 32
-  width?: number;       // şerit kalınlığı (px), default 18
-  gravity?: number;     // 0..1 arası düşüş etkisi, default 0.4
-  anchorBias?: number;  // C2'nin x-yerleşimi (kaynağa yakınlık), 0..1, default 0.15
-  sourceAngleRad?: number | null; // şişe ağzı yönü; verilmezse start->end vektörü
+  segments?       : number;    // default 32
+  width?          : number;       // şerit kalınlığı (px), default 18
+  gravity?        : number;     // 0..1 arası düşüş etkisi, default 0.4
+  anchorBias?     : number;  // C2'nin x-yerleşimi (kaynağa yakınlık), 0..1, default 0.15
+  sourceAngleRad? : number | null; // şişe ağzı yönü; verilmezse start->end vektörü
 };
 
 /**
