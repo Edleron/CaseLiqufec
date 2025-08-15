@@ -6,8 +6,8 @@ import { PixiPlugin } from "gsap/PixiPlugin";
 import gsap from "gsap";
 import Background from "../Background";
 
-import fragment from './shaders/pour/sharedShader.frag?raw';
-import vertex   from './shaders/pour/sharedShader.vert?raw';
+import fragment from '../shaders/pour/sharedShader.frag?raw';
+import vertex   from '../shaders/pour/sharedShader.vert?raw';
 
 /**
  * =========================
@@ -60,48 +60,50 @@ function thicknessProfile(t: number, base: number): number {
   PixiPlugin.registerPIXI(PIXI);
 
   const assetList = [
-    { alias: "Bottle_Front", src: "/assets/Bottle_Front.png" },
-    { alias: "Bottle_Back", src: "/assets/Bottle_Back.png" },
-    { alias: "Bottle_Mask", src: "/assets/Bottle_Mask.png" },
-    { alias: "EllipseRed", src: "/assets/EllipseRed.png" },
-    { alias: "water_body", src: "/assets/water_body.png" },
-    { alias: "test",       src: "/assets/bg_rotate.jpg" },
+    // { alias: "Bottle_Front", src: "/assets/Bottle_Front.png" },
+    // { alias: "Bottle_Back", src: "/assets/Bottle_Back.png" },
+    // { alias: "Bottle_Mask", src: "/assets/Bottle_Mask.png" },
+    // { alias: "EllipseRed", src: "/assets/EllipseRed.png" },
+    // { alias: "water_body", src: "/assets/water_body.png" },
+    // { alias: "test",       src: "/assets/bg_rotate.jpg" },
     // ...
   ];
 
+  /*
   assetList.forEach((asset) => {
     Assets.add({ alias: asset.alias, src: asset.src });
   });
 
   // Load assets
   await Promise.all(assetList.map((asset) => Assets.load(asset.alias)));
+  */
 
   const background = new Background(Texture.WHITE);
   background.resize(app.screen.width, app.screen.height);
   app.stage.addChild(background);
 
-
   // Sample Pixi Sprite object
-  const bottleFront = Sprite.from("Bottle_Front");
-  bottleFront.anchor.set(0.5);
-  bottleFront.scale.set(1);
-  bottleFront.position.set(0, 0);
-  app.stage.addChild(bottleFront);
+  // const bottleFront = Sprite.from("Bottle_Front");
+  // bottleFront.anchor.set(0.5);
+  // bottleFront.scale.set(1);
+  // bottleFront.position.set(0, 0);
+  // app.stage.addChild(bottleFront);
 
   // assets ve sahne kurulduktan sonra:
   // Kaynak & hedef ağızları (world)
   const start = new Point(500, 160);
-  const end   = new Point(650, 450  );
+  const end   = new Point(350, 450);
 
   // Dökülme şeridi
   const pour = createPourMeshV8(start, end, {
-    width: 22,
+    width: 30,
     gravity: 0,
-    segments: 22,
-    anchorBias: 1,      // C2 X'ini kaynağa daha da yakın tutar -> daha hızlı dikeyleşir
-    sourceAngleRad: Math.PI * -0.15, // şişe ağzı yönünü manuel vermek istersen aç
+    segments: 30,
+    anchorBias: 2,      // C2 X'ini kaynağa daha da yakın tutar -> daha hızlı dikeyleşir
+    sourceAngleRad: Math.PI * 5, // şişe ağzı yönünü manuel vermek istersen aç
   });
 
+  pour.setColor(0.15, 0.55, 0.95, 0.85); // mavi renk
   app.stage.addChild(pour.container);
 
   // büyüme animasyonu
@@ -138,7 +140,7 @@ export function createPourMeshV8(
   const positions = new Float32Array((segments + 1) * 2 * 2); // aPosition (x,y) * 2 kenar
   const uvs       = new Float32Array((segments + 1) * 2 * 2); // aUV (u,v) * 2 kenar
   const indices   = new Uint16Array(segments * 6);
-
+  
   // index buffer (triangle strip -> triangles)
   for (let i = 0; i < segments; i++) {
     const i0 = i * 2, i1 = i0 + 1, i2 = i0 + 2, i3 = i0 + 3;
