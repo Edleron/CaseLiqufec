@@ -66,13 +66,13 @@ export class Bottle extends Container {
 
     let currentFillLevel  = 0;
     let meshIndex         = 0
-    let meshPosition      = [-1 * (554 / this.layerCount), 0, (554 / this.layerCount)];
+    let meshPosition      = [-1 * (554 / this.layerCount), 0, (554 / this.layerCount)]; // todo refactors
 
     // Alt katmandan üst katmana doğru mesh'leri oluştur
     layers.forEach((layer, index) => {
       const mesh  = this.createMesh(layer.color, currentFillLevel, layer.fillAmount);
       mesh.name   = `liquidLayer_${index}`;
-      mesh.position.set(0, meshPosition[meshIndex]); // Katman yüksekliğine göre ayarla
+      mesh.position.set(0, meshPosition[meshIndex]); // Katman yüksekliğine göre ayarla // todo refactors
       this.liquidContainer.addChild(mesh);
       currentFillLevel += layer.fillAmount;
       meshIndex++;
