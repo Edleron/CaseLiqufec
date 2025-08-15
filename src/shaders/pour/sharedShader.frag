@@ -1,10 +1,10 @@
 // shaders/pour/sharedShader.frag
 precision mediump float;
 
-varying vec2 vUV;
+in vec2 vUV;
+in vec3 vColor;
 
 // Pixi v8 "resources.pour" altında tanımlanacak
-uniform vec4  uColor;
 uniform float uTime;
 uniform float uFlowSpeed;
 uniform float uEdgeSoftness;
@@ -14,6 +14,8 @@ uniform float uTail;
 uniform float uHead;
 uniform float uFoamWidth;
 uniform float uFoamBoost;
+
+const float XXX = 0.85;
 
 void main() {
     // Görünür segment [uTail, uHead]
@@ -29,7 +31,7 @@ void main() {
     // Kenarlara (vUV.y: 0..1) yumuşak alpha
     float distToEdge = min(vUV.y, 1.0 - vUV.y);
     float edge = smoothstep(0.0, uEdgeSoftness, distToEdge);
-    float alpha = uColor.a * edge * vis;
+    float alpha = XXX * edge * vis;
     alpha *= clamp(1.0 - abs(wobble) * 4.0, 0.0, 1.0);
 
     // Köpük vurgusu (baş/kuyruk)
@@ -37,6 +39,6 @@ void main() {
     float tailFoam = 1.0 - smoothstep(uTail, uTail + uFoamWidth, vUV.x);
     float foam = max(headFoam, tailFoam) * uFoamBoost * edge;
 
-    vec3 col = uColor.rgb + foam;
+    vec3 col = clamp(vColor.rgb + foam, 0.0, 1.0);
     gl_FragColor = vec4(col, alpha);
 }

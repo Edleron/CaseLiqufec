@@ -50,7 +50,7 @@ function thicknessProfile(t: number, base: number): number {
 
 (async () => {
   const app = new Application();
-  await app.init({ background: "#ffffff", resizeTo: window });
+  await app.init({ background: "#ffffff", resizeTo: window, preference: 'webgl' });
   document.getElementById("pixi-container")!.appendChild(app.canvas);
 
   (globalThis as any).__PIXI_APP__ = app;
@@ -103,7 +103,7 @@ function thicknessProfile(t: number, base: number): number {
     sourceAngleRad: Math.PI * 5, // şişe ağzı yönünü manuel vermek istersen aç
   });
 
-  pour.setColor(0.15, 0.55, 0.95, 0.85); // mavi renk
+  // pour.setColor(0.15, 0.55, 0.95, 0.85); // mavi renk
   app.stage.addChild(pour.container);
 
   // büyüme animasyonu
@@ -136,9 +136,11 @@ export function createPourMeshV8(
   const gravity = opts.gravity ?? 0.4;
   const anchorBias = Math.max(0, Math.min(opts.anchorBias ?? 0.15, 1));
 
+  const vertexCount = (segments + 1) * 2;
+
   // Geometry buffers
-  const positions = new Float32Array((segments + 1) * 2 * 2); // aPosition (x,y) * 2 kenar
-  const uvs       = new Float32Array((segments + 1) * 2 * 2); // aUV (u,v) * 2 kenar
+  const positions = new Float32Array(vertexCount * 2); // x,y per vertex
+  const uvs       = new Float32Array(vertexCount * 2); // u,v per vertex
   const indices   = new Uint16Array(segments * 6);
   
   // index buffer (triangle strip -> triangles)
@@ -153,10 +155,21 @@ export function createPourMeshV8(
     indices[idx + 5] = i1;
   }
 
+  
+  const baseRgb = new PIXI.Color('rgba(100, 0, 80, 1.0)').toRgbArray(); // [r,g,b] 0..1
+  const colors = new Float32Array(vertexCount * 3);
+  for (let i = 0; i < vertexCount; i++) {
+    const o = i * 3;
+    colors[o + 0] = baseRgb[0];
+    colors[o + 1] = baseRgb[1];
+    colors[o + 2] = baseRgb[2];
+  }
+
   const geometry = new Geometry({
     attributes: {
       aPosition: positions,   // Float32Array
       aUV:       uvs,         // Float32Array
+      aColor:     colors,
     },
     indexBuffer: indices,     // Uint16Array
   });
@@ -166,7 +179,7 @@ export function createPourMeshV8(
     gl: { vertex: vertex, fragment: fragment },
     resources: {
       pour: {
-        uColor:        { value: [0.15, 0.55, 0.95, 0.85], type: "vec4<f32>" },
+        // uColor:        { value: [0.15, 0.55, 0.95, 0.85], type: "vec4<f32>" },
         uTime:         { value: 0.0,  type: "f32" },
         uFlowSpeed:    { value: 0.35, type: "f32" },
         uEdgeSoftness: { value: 0.12, type: "f32" },
@@ -260,7 +273,14 @@ export function createPourMeshV8(
   }
 
   function setColor(r: number, g: number, b: number, a: number) {
-    shader.resources.pour.uniforms.uColor = [r, g, b, a];
+    // Update per-vertex color buffer (shader does not use uColor)
+    for (let i = 0; i < vertexCount; i++) {
+      const o = i * 3;
+      colors[o + 0] = r;
+      colors[o + 1] = g;
+      colors[o + 2] = b;
+    }
+    geometry.getBuffer("aColor")!.update();
   }
 
   return { container, mesh, shader, rebuildGeometry, setVisibleRange, setColor };
